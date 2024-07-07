@@ -1,7 +1,7 @@
 // src/components/Simulador.js
 import React, { useState } from 'react';
-import { realizarSimulacion } from '../utils/simulacion';
-import ResultadoTabla from './ResultadoTabla';
+import { realizarSimulacion } from '../utils/simulation';
+import ResultadoTabla from './table';
 
 const Simulador = () => {
     const [filas, setFilas] = useState(0);

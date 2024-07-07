@@ -1,4 +1,4 @@
-// src/components/ResultadoTabla.js
+// src/components/table.js
 import React from 'react';
 
 const ResultadoTabla = ({ resultados }) => {
