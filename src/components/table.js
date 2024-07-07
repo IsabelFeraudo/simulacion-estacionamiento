@@ -1,4 +1,5 @@
 // src/components/table.js
+//ESTA VERSION NO FUNCIONA
 import React from 'react';
 
 const ResultadoTabla = ({ resultados }) => {

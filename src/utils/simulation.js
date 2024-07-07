@@ -1,55 +1,113 @@
-// src/utils/simulacion.js
+// src/utils/simulation.js
+//ESTA VERSION NO FUNCIONA
+
+const generarTiempoEntreLlegadas = () => 12 + Math.random() * (14 - 12);
+const generarTiempoEstacionamiento = () => {
+    const random = Math.random();
+    if (random < 0.5) return 1;
+    if (random < 0.8) return 2;
+    if (random < 0.95) return 3;
+    return 4;
+};
+const generarTamañoVehiculo = () => {
+    const random = Math.random();
+    if (random < 0.6) return 'pequeño';
+    if (random < 0.85) return 'grande';
+    return 'utilitario';
+};
 
 export const realizarSimulacion = (filas, tiempo) => {
     const resultados = [];
     let reloj = 0;
+    let proximaLlegada = generarTiempoEntreLlegadas();
+    const autos = [];
+    let proximoFinCobro = Infinity;
+    let cola = 0;
+    let disponibilidadPequeno = 10;
+    let disponibilidadGrande = 6;
+    let disponibilidadUtilitarios = 4;
+    let cantidadConductores = 0;
+    let acumRecaudacion = 0;
 
     for (let i = 0; i < filas; i++) {
-        const randomLlegada = Math.random();
-        const tiempoEntreLlegadas = 12 + randomLlegada * (14 - 12);
-        const proximaLlegada = reloj + tiempoEntreLlegadas;
+        const siguienteEvento = Math.min(proximaLlegada, proximoFinCobro, ...autos.map(auto => auto.finEstacionamiento));
+        const evento = {
+            evento: '',
+            reloj: siguienteEvento.toFixed(2),
+            randomLlegada: '',
+            tiempoEntreLlegadas: '',
+            proximaLlegada: '',
+            randomFinEstacionamiento: '',
+            tiempoEstacionamiento: '',
+            finEstacionamiento: '',
+            randomTamañoVehiculo: '',
+            tamañoVehiculo: '',
+            finCobro: '',
+            estadoEmpleado: '',
+            cola: cola,
+            disponibilidadGrande: disponibilidadGrande,
+            disponibilidadPequeno: disponibilidadPequeno,
+            disponibilidadUtilitarios: disponibilidadUtilitarios,
+            estadoPlaya: '',
+            cantidadConductores: cantidadConductores,
+            acumRecaudacion: acumRecaudacion,
+        };
 
-        const randomFinEstacionamiento = Math.random();
-        let tiempoEstacionamiento;
-        if (randomFinEstacionamiento < 0.5) tiempoEstacionamiento = 1;
-        else if (randomFinEstacionamiento < 0.8) tiempoEstacionamiento = 2;
-        else if (randomFinEstacionamiento < 0.95) tiempoEstacionamiento = 3;
-        else tiempoEstacionamiento = 4;
+        if (siguienteEvento === proximaLlegada) {
+            // Evento: Llegada de auto
+            evento.evento = 'llegada_auto';
+            evento.randomLlegada = Math.random().toFixed(2);
+            evento.tiempoEntreLlegadas = generarTiempoEntreLlegadas().toFixed(2);
+            evento.proximaLlegada = (reloj + Number(evento.tiempoEntreLlegadas)).toFixed(2);
 
-        const finEstacionamiento = reloj + tiempoEstacionamiento;
+            const tamañoVehiculo = generarTamañoVehiculo();
+            evento.randomTamañoVehiculo = Math.random().toFixed(2);
+            evento.tamañoVehiculo = tamañoVehiculo;
 
-        const randomTamañoVehiculo = Math.random();
-        let tamañoVehiculo;
-        if (randomTamañoVehiculo < 0.6) tamañoVehiculo = "pequeño";
-        else if (randomTamañoVehiculo < 0.85) tamañoVehiculo = "grande";
-        else tamañoVehiculo = "utilitario";
+            let estadoAuto = '';
+            if (tamañoVehiculo === 'pequeño' && disponibilidadPequeno > 0) {
+                disponibilidadPequeno--;
+                estadoAuto = 'estacionado';
+            } else if (tamañoVehiculo === 'grande' && disponibilidadGrande > 0) {
+                disponibilidadGrande--;
+                estadoAuto = 'estacionado';
+            } else if (tamañoVehiculo === 'utilitario' && disponibilidadUtilitarios > 0) {
+                disponibilidadUtilitarios--;
+                estadoAuto = 'estacionado';
+            } else {
+                estadoAuto = 'rechazado';
+            }
 
-        const finCobro = reloj + 2 / 60;
-        const estadoEmpleado = "libre"; // Este es un simplificación, deberías implementar la lógica de cola y estado del empleado
+            if (estadoAuto === 'estacionado') {
+                const tiempoEstacionamiento = generarTiempoEstacionamiento();
+                const finEstacionamiento = reloj + tiempoEstacionamiento;
+                autos.push({ tamañoVehiculo, finEstacionamiento, tiempoEstacionamiento, estado: 'estacionado' });
+                evento.finEstacionamiento = finEstacionamiento.toFixed(2);
+                evento.tiempoEstacionamiento = tiempoEstacionamiento;
+            }
 
-        resultados.push({
-            evento: `Llegada de auto ${i + 1}`,
-            reloj: reloj.toFixed(2),
-            randomLlegada: randomLlegada.toFixed(2),
-            tiempoEntreLlegadas: tiempoEntreLlegadas.toFixed(2),
-            proximaLlegada: proximaLlegada.toFixed(2),
-            randomFinEstacionamiento: randomFinEstacionamiento.toFixed(2),
-            tiempoEstacionamiento,
-            finEstacionamiento: finEstacionamiento.toFixed(2),
-            randomTamañoVehiculo: randomTamañoVehiculo.toFixed(2),
-            tamañoVehiculo,
-            finCobro: finCobro.toFixed(2),
-            estadoEmpleado,
-            cola: 0, // Simplificación
-            disponibilidadGrande: 6, // Simplificación
-            disponibilidadPequeño: 10, // Simplificación
-            disponibilidadUtilitarios: 4, // Simplificación
-            estadoPlaya: "hay lugar", // Simplificación
-            cantidadConductores: 0, // Simplificación
-            acumRecaudacion: 0 // Simplificación
-        });
+            proximaLlegada = Number(evento.proximaLlegada);
+        } else if (autos.some(auto => auto.finEstacionamiento === siguienteEvento)) {
+            // Evento: Fin de estacionamiento
+            evento.evento = 'fin_estacionamiento';
+            const auto = autos.find(auto => auto.finEstacionamiento === siguienteEvento);
+            auto.estado = 'esperando cobro';
+            cola++;
+        } else if (siguienteEvento === proximoFinCobro) {
+            // Evento: Fin de cobro
+            evento.evento = 'fin_cobro';
+            cola--;
+            cantidadConductores++;
+            acumRecaudacion += autos[0].tamañoVehiculo === 'pequeño' ? 1 : autos[0].tamañoVehiculo === 'grande' ? 1.2 : 1.5;
+            autos.shift();
+        }
 
-        reloj = proximaLlegada;
+        evento.estadoPlaya = disponibilidadPequeno > 0 || disponibilidadGrande > 0 || disponibilidadUtilitarios > 0 ? 'hay lugar' : 'llena';
+        evento.cantidadConductores = cantidadConductores;
+        evento.acumRecaudacion = acumRecaudacion.toFixed(2);
+
+        resultados.push(evento);
+        reloj = siguienteEvento;
     }
 
     return resultados;
